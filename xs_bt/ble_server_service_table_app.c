@@ -29,15 +29,8 @@ static UINT8 gBleAdvertData[] =
     // connection interval range
     0x06,
     GAP_ADTYPE_MANUFACTURER_SPECIFIC,1,2,3,4,5,
-    0x05,
-    GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE,
-    UINT16_LO(DEFAULT_DESIRED_MIN_CONN_INTERVAL),
-    UINT16_HI(DEFAULT_DESIRED_MIN_CONN_INTERVAL),  
-    UINT16_LO(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
-    UINT16_HI(DEFAULT_DESIRED_MAX_CONN_INTERVAL),  
-    0x02,
-    GAP_ADTYPE_POWER_LEVEL,
-    0
+    0x03,
+    GAP_ADTYPE_16BIT_MORE,0xF0,0xFF
 };
 
 static UINT8 gBleScanRspData[] =
@@ -72,10 +65,12 @@ static void BleAppSetAdvtisingPara(UINT8 type, UINT8 own_addr_type, LE_BT_ADDR_T
     para.filter_policy = filter;
 
     LeGapSetAdvParameter(&para);
+
 }
 
 static void BleAppSmMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
+    BLE_APP_PRINT("BleAppSmMsgHandler called\n\r");
     switch (id)
     {
         case LE_SMP_MSG_PAIRING_ACTION_IND:
@@ -124,6 +119,7 @@ static void BleAppSmMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 
 static void BleCmMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
+    BLE_APP_PRINT("BleCmMsgHandler called\n\r");
     switch (id)
     {
         case LE_CM_MSG_INIT_COMPLETE_CFM:
@@ -271,6 +267,7 @@ static void BleCmMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 
 static void BleAppMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
+    printf("BleAppMsgHandler OK\r\n");
     switch (id)
     {
         case BLE_APP_MSG_INITIALIZING:
@@ -308,6 +305,7 @@ static void BleAppMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 
 static void BleAppTaskHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
+    printf("BleAppTaskHandler OK\r\n");
     if ((id >= LE_GATT_MSG_BASE) && (id < LE_GATT_MSG_TOP))
     {
         BleAppGattMsgHandler(task, id, message);
@@ -344,5 +342,8 @@ void BleAppInit(void)
     LeHostCreateTask(&gTheBle.task, BleAppTaskHandler);
     LeSendMessage(&gTheBle.task, BLE_APP_MSG_INITIALIZING, 0);
     printf("OPL1000 BLE init completed. \r\n");
+
+    tracer_log_mode_set(2);
+    tracer_log_level_set(255, 7);
 }
 

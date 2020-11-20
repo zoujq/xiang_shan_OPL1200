@@ -421,6 +421,7 @@ static void Main_AppInit_patch(void)
 *   none
 *
 *************************************************************************/
+int test01=0;
 static void Main_AppThread_1(void *argu)
 {
     uint32_t ulCount = 0;
@@ -431,7 +432,7 @@ static void Main_AppThread_1(void *argu)
         
         // send the message into AppMessageQ
         ulCount++;
-        printf("xs_v1.0.1 free heap:%d\n",xPortGetFreeHeapSize());
+        printf("xs_v1.0.1 free heap:%d,%d\n",xPortGetFreeHeapSize(),test01);
     }
 }
 

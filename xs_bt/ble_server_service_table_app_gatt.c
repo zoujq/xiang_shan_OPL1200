@@ -41,24 +41,23 @@ static UINT16 gGapConnParamUuid           = ATT_CHAR_PERIPH_PREF_CON_PARAM;
 static UINT8  gGapConnParamCharVal[]      = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_RD, ATT_CHAR_PERIPH_PREF_CON_PARAM);
 static UINT16 gGapConnParamVal[4]         = {DEFAULT_DESIRED_MIN_CONN_INTERVAL, DEFAULT_DESIRED_MAX_CONN_INTERVAL, DEFAULT_DESIRED_SLAVE_LATENCY, DEFAULT_DESIRED_SUPERVERSION_TIMEOUT};
 
-// This is used for Blood Pressure service
+// // This is used for XS Pressure service
+#define XS_UART_SERVICE_UUID 0xFFF0
+#define XS_UART_READ_NOTIFY_CHARA_UUID 0xFFF1
+#define XS_UART_WIRTE_CHARA_UUID 0xFFF2
 #define BLPS_BP_MEAS_MAX_LEN            (19)
 
-static UINT16 gBlpsUuid = ATT_SVC_BLOOD_PRESSURE;
+static UINT16 gBleWifiSvcUuid             = XS_UART_SERVICE_UUID;
 
-static UINT16 gBlpsMeasUuid               = ATT_CHAR_BLOOD_PRESSURE_MEAS;
-static UINT8  gBlpsMeasCharVal[]          = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_IND, ATT_CHAR_BLOOD_PRESSURE_MEAS);
-static UINT8  gBlpsMeasVal[19]               = {0};
-static UINT16 gBlpsMeasClientCfg           = 0;
+static UINT16 gBleWifiDataInUuid          = XS_UART_WIRTE_CHARA_UUID;
+static UINT8  gBleWifiDataInCharVal[]     = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_WR_NO_RESP | LE_GATT_CHAR_PROP_WR, XS_UART_WIRTE_CHARA_UUID);
+static UINT8  gBleWifiDataInVal[LE_ATT_MAX_MTU];
 
-static UINT16 gBlpsIntermCuffUuid          = ATT_CHAR_INTERMEDIATE_CUFF_PRESSURE;
-static UINT8  gBlpsIntermCuffCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF, ATT_CHAR_INTERMEDIATE_CUFF_PRESSURE);
-static UINT8  gBlpsIntermCuffVal[19]      = {0};
-static UINT16 gBlpsIntermCuffClientCfg    = 0;
+static UINT16 gBleWifiDataOutUuid         = XS_UART_WIRTE_CHARA_UUID;
+static UINT8  gBleWifiDataOutCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF, XS_UART_WIRTE_CHARA_UUID);
+static UINT8  gBleWifiDataOutVal[LE_ATT_MAX_MTU];
+static UINT16 gBleWifiDataOutClientCfg    = 1;
 
-static UINT16 gBlpsFeatureUuid              = ATT_CHAR_BLOOD_PRESSURE_FEATURE;
-static UINT8  gBlpsFeatureCharVal[]       = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_RD, ATT_CHAR_BLOOD_PRESSURE_FEATURE);
-static UINT8  gBlpsFeatureVal[2]           = {0, 0};
 
 
 static LE_GATT_ATTR_T gGattSvcDb[GATT_IDX_TOP] =
@@ -86,22 +85,19 @@ static LE_GATT_ATTR_T gGapSvcDb[GAP_IDX_TOP] =
     [GAP_IDX_CONN_PARAM_VAL]               = CHARACTERISTIC_UUID16(&gGapConnParamUuid, LE_GATT_PERMIT_READ, 0, 8, gGapConnParamVal)
 };
 
-static LE_GATT_ATTR_T gBlpsSvcDb[BPS_IDX_TOP] =
+static LE_GATT_ATTR_T gBwpSvcDb[BWP_IDX_TOP] =
 {
-    // Blps Service Declaration
-    [BPS_IDX_SVC]                          = PRIMARY_SERVICE_DECL_UUID16(&gBlpsUuid),
-    // BLPS Blood Pressure Measurement Characteristic 
-    [BPS_IDX_BP_MEAS_CHAR]                 = CHARACTERISTIC_DECL_UUID16(gBlpsMeasCharVal),
-    [BPS_IDX_BP_MEAS_VAL]                  = CHARACTERISTIC_UUID16(&gBlpsMeasUuid, 0, 0, sizeof(gBlpsMeasVal), gBlpsMeasVal),
-    [BPS_IDX_BP_MEAS_IND_CFG]              = CHAR_CLIENT_CONFIG_DESCRIPTOR(LE_GATT_PERMIT_AUTHOR_READ | LE_GATT_PERMIT_AUTHOR_WRITE, &gBlpsMeasClientCfg),
-    // BLPS Intermediate Cuff Pressure Measurement Characteristic 
-    [BPS_IDX_INTM_CUFF_PRESS_CHAR]      = CHARACTERISTIC_DECL_UUID16(gBlpsIntermCuffCharVal),
-    [BPS_IDX_INTM_CUFF_PRESS_VAL]       = CHARACTERISTIC_UUID16(&gBlpsIntermCuffUuid, 0, 0, sizeof(gBlpsIntermCuffVal), gBlpsIntermCuffVal),
-    [BPS_IDX_INTM_CUFF_PRESS_NTF_CFG]   = CHAR_CLIENT_CONFIG_DESCRIPTOR(LE_GATT_PERMIT_AUTHOR_READ | LE_GATT_PERMIT_AUTHOR_WRITE, &gBlpsIntermCuffClientCfg),
-    // BLPS Feature Characteristic 
-    [BPS_IDX_BP_FEATURE_CHAR]             = CHARACTERISTIC_DECL_UUID16(gBlpsFeatureCharVal),
-    [BPS_IDX_BP_FEATURE_VAL]              = CHARACTERISTIC_UUID16(&gBlpsFeatureUuid, LE_GATT_PERMIT_AUTHOR_READ, 0, sizeof(gBlpsFeatureVal), gBlpsFeatureVal)
+    // BLEWIFI Service Declaration
+    [BWP_IDX_SVC]                  = PRIMARY_SERVICE_DECL_UUID16(&gBleWifiSvcUuid),
+    // BLEWIFI Data In Characteristic
+    [BWP_IDX_DATA_IN_CHAR]         = CHARACTERISTIC_DECL_UUID16(gBleWifiDataInCharVal),
+    [BWP_IDX_DATA_IN_VAL]          = CHARACTERISTIC_UUID16(&gBleWifiDataInUuid, LE_GATT_PERMIT_AUTHOR_WRITE, sizeof(gBleWifiDataInVal), 0, gBleWifiDataInVal),
+    // BLEWIFI Data Out Characteristic
+    [BWP_IDX_DATA_OUT_CHAR]        = CHARACTERISTIC_DECL_UUID16(gBleWifiDataOutCharVal),
+    [BWP_IDX_DATA_OUT_VAL]         = CHARACTERISTIC_UUID16(&gBleWifiDataOutUuid, 0, sizeof(gBleWifiDataOutVal), 0, gBleWifiDataOutVal),
+    [BWP_IDX_DATA_OUT_CFG]         = CHAR_CLIENT_CONFIG_DESCRIPTOR(LE_GATT_PERMIT_AUTHOR_READ | LE_GATT_PERMIT_AUTHOR_WRITE, &gBleWifiDataOutClientCfg)
 };
+
 
 
 static LE_GATT_SERVICE_T *gGattSvc = 0;
@@ -156,7 +152,7 @@ static void BleAppHandleGapServiceRead(LE_GATT_MSG_ACCESS_READ_IND_T *ind)
 {
     UINT8 attErr = 0;
     UINT16 attrid = ind->handle - gGapSvc->startHdl;
-        
+    BLE_APP_PRINT("BleAppHandleGapServiceRead called\n\r");    
     switch (attrid)
     {
         case GAP_IDX_DEVICE_NAME_VAL:
@@ -213,9 +209,8 @@ static void BleAppHandleBlpsServiceRead(LE_GATT_MSG_ACCESS_READ_IND_T *ind)
     BLE_APP_PRINT("BleAppHandleBlpsServiceRead attId = %d offset = %d\r\n", attrid, ind->offset);
     switch (attrid)
     {
-        case BPS_IDX_BP_MEAS_IND_CFG:
-        case BPS_IDX_INTM_CUFF_PRESS_NTF_CFG:
-        case BPS_IDX_BP_FEATURE_VAL:
+        case BWP_IDX_DATA_OUT_CFG:
+        case BWP_IDX_DATA_IN_VAL:
         break;
 
         default:
@@ -233,8 +228,8 @@ static void BleAppHandleBlpsServiceWrite(LE_GATT_MSG_ACCESS_WRITE_IND_T *ind)
     BLE_APP_PRINT("BleAppHandleBlpsServiceWrite attId = %d op = %x offset = %d\r\n", attrid, ind->flag, ind->offset);
     switch (attrid)
     {
-        case BPS_IDX_BP_MEAS_IND_CFG:
-        case BPS_IDX_INTM_CUFF_PRESS_NTF_CFG:
+        case BWP_IDX_DATA_OUT_CFG:
+        case BWP_IDX_DATA_IN_VAL:
         {
             LeGattChangeAttrVal(gBlpsSvc, attrid, 2, ind->pVal);
         }
@@ -250,6 +245,7 @@ static void BleAppHandleBlpsServiceWrite(LE_GATT_MSG_ACCESS_WRITE_IND_T *ind)
 
 static void BleGattHandleAccessRead(LE_GATT_MSG_ACCESS_READ_IND_T *ind)
 {
+     BLE_APP_PRINT("BleGattHandleAccessRead called\n\r");    
     if ((ind->handle >= gGattSvc->startHdl) && (ind->handle <= gGattSvc->endHdl))
     {
         BleAppHandleGattServiceRead(ind);
@@ -270,6 +266,7 @@ static void BleGattHandleAccessRead(LE_GATT_MSG_ACCESS_READ_IND_T *ind)
 
 static void BleGattHandleAccessWrite(LE_GATT_MSG_ACCESS_WRITE_IND_T *ind)
 {
+    BLE_APP_PRINT("BleGattHandleAccessWrite called\n\r");    
     if ((ind->handle >= gGattSvc->startHdl) && (ind->handle <= gGattSvc->endHdl))
     {
         BleAppHandleGattServiceWrite(ind);
@@ -290,6 +287,7 @@ static void BleGattHandleAccessWrite(LE_GATT_MSG_ACCESS_WRITE_IND_T *ind)
 
 void BleAppGattMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
+    BLE_APP_PRINT("BleAppGattMsgHandler called\n\r"); 
     switch (id)
     {
         case LE_GATT_MSG_INIT_CFM:
@@ -310,7 +308,7 @@ void BleAppGattMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
                 BLE_APP_PRINT("LeGattRegisterService gGapSvc success\r\n");
             }
 
-            gBlpsSvc = LeGattRegisterService(gBlpsSvcDb, sizeof(gBlpsSvcDb) / sizeof(LE_GATT_ATTR_T));
+            gBlpsSvc = LeGattRegisterService(gBwpSvcDb, sizeof(gBwpSvcDb) / sizeof(LE_GATT_ATTR_T));
 
             if (gBlpsSvc)
             {
@@ -373,8 +371,9 @@ void BleGattIndicateServiceChange(UINT16 conn_hdl)
 {
     UINT16 len;
     UINT16 val;
+    BLE_APP_PRINT("BleGattIndicateServiceChange called\n\r"); 
     LE_ERR_STATE rc = LeGattGetAttrVal(gGattSvc, GATT_IDX_SERVICE_CHANGE_CFG, &len, &val);
-
+    
     if (rc) return;
 
     if (val == LE_GATT_CLIENT_CFG_INDICATION)
