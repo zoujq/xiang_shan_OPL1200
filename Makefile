@@ -208,6 +208,7 @@ INCDIR += -I ../../../../APS_PATCH/project/opl1000/boot_sequence
 INCDIR += -I ../../../../APS_PATCH/project/opl1000/include
 INCDIR += -I ../../../../APS_PATCH/project/opl1000/startup
 INCDIR += -I ../../../../APS_PATCH/project/opl1000/lib
+INCDIR += -I ../../../../APS_PATCH/driver/chip/hal_pinmux
 INCDIR += -I ./xs_bt
 INCDIR += -I ./xs_wifi
 INCDIR += -I ./xs_xieyi
@@ -217,7 +218,11 @@ INCDIR += -I ./xs_xieyi
 M_SRC = ./main_patch.c
 M_SRC += ./xs_bt/ble_server_service_table_app.c
 M_SRC += ./xs_bt/ble_server_service_table_app_gatt.c
-
+M_SRC += ./xs_xieyi/xs_uart.c
+M_SRC += ./OPL1000_pin_mux_define.c
+M_SRC += ../../../../APS_PATCH/driver/chip/hal_pinmux/Hal_pinmux_common.c
+M_SRC += ../../../../APS_PATCH/driver/chip/hal_pinmux/Hal_pinmux_api.c
+M_SRC += ../../../../APS_PATCH/driver/chip/hal_pinmux/Hal_pinmux_uart.c
 #############   build   ##############
 all:
 	@rm -rf $(FOLDER)

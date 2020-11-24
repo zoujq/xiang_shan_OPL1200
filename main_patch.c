@@ -51,6 +51,7 @@ Head Block of The File
 #include "hal_vic.h"
 #include "boot_sequence.h"
 #include "at_cmd_common_patch.h"
+#include "hal_uart.h"
 
 #include "ble_server_service_table_app.h"
 
@@ -387,8 +388,11 @@ static void Main_AppInit_patch(void)
     osThreadDef_t tThreadDef;
     osMessageQDef_t tMessageDef;
     osPoolDef_t tMemPoolDef;
-    
+    extern void xs_init_uart();
 
+
+    //Uart init
+    xs_init_uart();
     //BT INIT
     BleAppInit();
     //
@@ -421,7 +425,6 @@ static void Main_AppInit_patch(void)
 *   none
 *
 *************************************************************************/
-int test01=0;
 static void Main_AppThread_1(void *argu)
 {
     uint32_t ulCount = 0;
@@ -430,9 +433,10 @@ static void Main_AppThread_1(void *argu)
     {
         osDelay(5000);      // delay 1000ms (1sec)
         
+        Hal_Uart_DataSend(UART_IDX_0,'Y');
         // send the message into AppMessageQ
         ulCount++;
-        printf("xs_v1.0.1 free heap:%d,%d\n",xPortGetFreeHeapSize(),test01);
+        printf("xs_v1.0.1 free heap:%d\n",xPortGetFreeHeapSize());
     }
 }
 

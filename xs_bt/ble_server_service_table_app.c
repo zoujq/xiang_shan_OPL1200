@@ -35,9 +35,9 @@ static UINT8 gBleAdvertData[] =
 
 static UINT8 gBleScanRspData[] =
 {
-    0x16,
+    0x09,
     GAP_ADTYPE_LOCAL_NAME_COMPLETE,   
-    'S', 'E', 'N', 'S', 'S', 'U', 'N', '0', '1'
+    'S', 'E', 'N', 'S', 'S', 'U', 'N', 'X'
 };
 
 

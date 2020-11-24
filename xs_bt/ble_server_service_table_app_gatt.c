@@ -43,7 +43,7 @@ static UINT16 gGapConnParamVal[4]         = {DEFAULT_DESIRED_MIN_CONN_INTERVAL, 
 
 // // This is used for XS Pressure service
 #define XS_UART_SERVICE_UUID 0xFFF0
-#define XS_UART_READ_NOTIFY_CHARA_UUID 0xFFF1
+#define XS_UART_NOTIFY_CHARA_UUID 0xFFF1
 #define XS_UART_WIRTE_CHARA_UUID 0xFFF2
 #define BLPS_BP_MEAS_MAX_LEN            (19)
 
@@ -53,8 +53,8 @@ static UINT16 gBleWifiDataInUuid          = XS_UART_WIRTE_CHARA_UUID;
 static UINT8  gBleWifiDataInCharVal[]     = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_WR_NO_RESP | LE_GATT_CHAR_PROP_WR, XS_UART_WIRTE_CHARA_UUID);
 static UINT8  gBleWifiDataInVal[LE_ATT_MAX_MTU];
 
-static UINT16 gBleWifiDataOutUuid         = XS_UART_WIRTE_CHARA_UUID;
-static UINT8  gBleWifiDataOutCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF, XS_UART_WIRTE_CHARA_UUID);
+static UINT16 gBleWifiDataOutUuid         = XS_UART_NOTIFY_CHARA_UUID;
+static UINT8  gBleWifiDataOutCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF, XS_UART_NOTIFY_CHARA_UUID);
 static UINT8  gBleWifiDataOutVal[LE_ATT_MAX_MTU];
 static UINT16 gBleWifiDataOutClientCfg    = 1;
 
