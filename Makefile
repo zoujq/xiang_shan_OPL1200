@@ -216,9 +216,15 @@ INCDIR += -I ./xs_xieyi
 
 #############   source    ##############
 M_SRC = ./main_patch.c
-M_SRC += ./xs_bt/ble_server_service_table_app.c
-M_SRC += ./xs_bt/ble_server_service_table_app_gatt.c
+M_SRC += ./xs_bt/ble_app.c
+M_SRC += ./xs_bt/ble_app_gatt.c
+M_SRC += ./xs_bt/xs_ble.c
+M_SRC += ./xs_xieyi/xs_app.c
 M_SRC += ./xs_xieyi/xs_uart.c
+M_SRC += ./xs_wifi/tcp_client.c
+M_SRC += ./xs_wifi/wifi_app.c
+M_SRC += ./xs_wifi/http_ota_example.c
+M_SRC += ./xs_xieyi/xs_store.c
 M_SRC += ./OPL1000_pin_mux_define.c
 M_SRC += ../../../../APS_PATCH/driver/chip/hal_pinmux/Hal_pinmux_common.c
 M_SRC += ../../../../APS_PATCH/driver/chip/hal_pinmux/Hal_pinmux_api.c

@@ -13,9 +13,11 @@
 #include "ble_server_service_table_app_gatt.h"
 #include "ble_gatt_if.h"
 #include "ble_uuid.h"
+#include "xs_app.h"
 
 
-#define BLE_DEVICE_NAME                    "SENSSUN01"
+//#define BLE_DEVICE_NAME                    "SENSSUN01"
+extern xs_app_data_t g_app_data;
 
 
 // This is used for GATT service
@@ -31,7 +33,7 @@ static UINT16 gGapSvcUuid = ATT_SVC_GENERIC_ACCESS;
 
 static UINT16 gGapDeviceNameUuid          = ATT_CHAR_DEVICE_NAME;
 static UINT8  gGapDeviceNameCharVal[]     = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_RD | LE_GATT_CHAR_PROP_WR, ATT_CHAR_DEVICE_NAME);
-static UINT8  gGapDeviceNameVal[31]       = BLE_DEVICE_NAME;
+//static UINT8  gGapDeviceNameVal[31]       = BLE_DEVICE_NAME;
 
 static UINT16 gGapAppearanceUuid          = ATT_CHAR_APPEARANCE;
 static UINT8  gGapAppearanceCharVal[]     = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_RD, ATT_CHAR_APPEARANCE);
@@ -54,7 +56,7 @@ static UINT8  gBleWifiDataInCharVal[]     = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CH
 static UINT8  gBleWifiDataInVal[LE_ATT_MAX_MTU];
 
 static UINT16 gBleWifiDataOutUuid         = XS_UART_NOTIFY_CHARA_UUID;
-static UINT8  gBleWifiDataOutCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF, XS_UART_NOTIFY_CHARA_UUID);
+static UINT8  gBleWifiDataOutCharVal[]    = CHAR_DECL_UUID16_ATTR_VAL(LE_GATT_CHAR_PROP_NTF | LE_GATT_CHAR_PROP_RD, XS_UART_NOTIFY_CHARA_UUID);
 static UINT8  gBleWifiDataOutVal[LE_ATT_MAX_MTU];
 static UINT16 gBleWifiDataOutClientCfg    = 1;
 
@@ -76,7 +78,7 @@ static LE_GATT_ATTR_T gGapSvcDb[GAP_IDX_TOP] =
     [GAP_IDX_SVC]                          = PRIMARY_SERVICE_DECL_UUID16(&gGapSvcUuid),
     // GAP Device Name Characteristic
     [GAP_IDX_DEVICE_NAME_CHAR]             = CHARACTERISTIC_DECL_UUID16(gGapDeviceNameCharVal),
-    [GAP_IDX_DEVICE_NAME_VAL]              = CHARACTERISTIC_UUID16(&gGapDeviceNameUuid, LE_GATT_PERMIT_AUTHOR_READ | LE_GATT_PERMIT_AUTHOR_WRITE, sizeof(gGapDeviceNameVal), sizeof(BLE_DEVICE_NAME) - 1, gGapDeviceNameVal),
+    [GAP_IDX_DEVICE_NAME_VAL]              = CHARACTERISTIC_UUID16(&gGapDeviceNameUuid, LE_GATT_PERMIT_AUTHOR_READ | LE_GATT_PERMIT_AUTHOR_WRITE, sizeof(g_app_data.ble_adv_name), sizeof(g_app_data.ble_adv_name) - 1, g_app_data.ble_adv_name),
     // GAP Appearance Characteristic
     [GAP_IDX_APPEARANCE_CHAR]              = CHARACTERISTIC_DECL_UUID16(gGapAppearanceCharVal),
     [GAP_IDX_APPEARANCE_VAL]               = CHARACTERISTIC_UUID16(&gGapAppearanceUuid, LE_GATT_PERMIT_READ, 0, 2, gGapAppearanceVal),
@@ -210,8 +212,12 @@ static void BleAppHandleBlpsServiceRead(LE_GATT_MSG_ACCESS_READ_IND_T *ind)
     switch (attrid)
     {
         case BWP_IDX_DATA_OUT_CFG:
-        case BWP_IDX_DATA_IN_VAL:
-        break;
+        {
+            UINT16 enable;
+            UINT16 len = 0;
+
+            LeGattGetAttrVal(gBlpsSvc, BWP_IDX_DATA_OUT_CFG, &len, &enable);
+        }
 
         default:
             attErr = LE_ATT_ERR_READ_NOT_PERMITTED;
@@ -225,15 +231,29 @@ static void BleAppHandleBlpsServiceWrite(LE_GATT_MSG_ACCESS_WRITE_IND_T *ind)
 {
     UINT8 attErr = 0;
     UINT16 attrid = ind->handle - gBlpsSvc->startHdl;
+    extern void xs_ble_received_cb(char* buff,int len);
+
     BLE_APP_PRINT("BleAppHandleBlpsServiceWrite attId = %d op = %x offset = %d\r\n", attrid, ind->flag, ind->offset);
     switch (attrid)
     {
         case BWP_IDX_DATA_OUT_CFG:
-        case BWP_IDX_DATA_IN_VAL:
         {
-            LeGattChangeAttrVal(gBlpsSvc, attrid, 2, ind->pVal);
+            UINT16 enable = *((UINT16 *)ind->pVal);
+
+            if ((ind->len == 2) && (enable <= 1))
+            {
+                LeGattChangeAttrVal(gBlpsSvc, BWP_IDX_DATA_OUT_CFG, 2, &enable);
+            }
+            else
+                attErr = LE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
         }
         break;
+        case BWP_IDX_DATA_IN_VAL:
+            {
+                LeGattChangeAttrVal(gBlpsSvc, attrid, 2, ind->pVal);
+            }
+            xs_ble_received_cb(ind->pVal,ind->len);
+            break;
 
         default:
             attErr = LE_ATT_ERR_WRITE_NOT_PERMITTED;

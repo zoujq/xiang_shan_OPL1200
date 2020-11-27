@@ -53,22 +53,22 @@ Head Block of The File
 #include "at_cmd_common_patch.h"
 #include "hal_uart.h"
 
-#include "ble_server_service_table_app.h"
 
 // Sec 2: Constant Definitions, Imported Symbols, miscellaneous
 // the number of elements in the message queue
-#define APP_MESSAGE_Q_SIZE  16
 
+
+/*
+    Please refer following hyper link to under memory allocation.
+    https://github.com/Opulinks-Tech/OPL1000-SDK/blob/master/Doc/zh_CN/OPL1000-Flash-User-Guide.pdf
+    Chapter 3 Flash Layout
+*/
 
 /********************************************
 Declaration of data structure
 ********************************************/
 // Sec 3: structure, uniou, enum, linked list
 // the content of message queue
-typedef struct
-{
-    uint32_t ulCount;
-} S_MessageQ;
 
 
 /********************************************
@@ -84,10 +84,7 @@ Declaration of Global Variables & Functions
 Declaration of static Global Variables & Functions
 ***************************************************/
 // Sec 6: declaration of static global variable
-static osThreadId g_tAppThread_1;
-static osThreadId g_tAppThread_2;
-static osMessageQId g_tAppMessageQ;
-static osPoolId g_tAppMemPoolId;
+
 static E_IO01_UART_MODE g_eAppIO01UartMode;
 
 // Sec 7: declaration of static function prototype
@@ -96,9 +93,6 @@ void __Patch_EntryPoint(void) __attribute__((used));
 static void Main_PinMuxUpdate(void);
 static void Main_FlashLayoutUpdate(void);
 static void Main_AppInit_patch(void);
-static void Main_AppThread_1(void *argu);
-static void Main_AppThread_2(void *argu);
-static osStatus Main_AppMessageQSend(S_MessageQ *ptMsg);
 static void Main_MiscDriverConfigSetup(void);
 static void Main_AtUartDbgUartSwitch(void);
 static void Main_MiscModulesInit(void);
@@ -212,7 +206,10 @@ static void Main_PinMuxUpdate(void)
 *************************************************************************/
 static void Main_FlashLayoutUpdate(void)
 {
-    // update here
+    extern void xs_store_init(); 
+
+    
+    xs_store_init(); 
 }
 
 /*************************************************************************
@@ -385,58 +382,16 @@ static void Main_ApsUartRxDectecCb(E_GpioIdx_t tGpioIdx)
 *************************************************************************/
 static void Main_AppInit_patch(void)
 {
-    osThreadDef_t tThreadDef;
-    osMessageQDef_t tMessageDef;
-    osPoolDef_t tMemPoolDef;
-    extern void xs_init_uart();
-
-
-    //Uart init
-    xs_init_uart();
-    //BT INIT
-    BleAppInit();
-    //
-    //
-    // create the thread for AppThread_1
-    tThreadDef.name = "App_1";
-    tThreadDef.pthread = Main_AppThread_1;
-    tThreadDef.tpriority = OS_TASK_PRIORITY_APP;        // osPriorityNormal
-    tThreadDef.instances = 0;                           // reserved, it is no used
-    tThreadDef.stacksize = OS_TASK_STACK_SIZE_APP;      // (512), unit: 4-byte, the size is 512*4 bytes
-    g_tAppThread_1 = osThreadCreate(&tThreadDef, NULL);
-    if (g_tAppThread_1 == NULL)
-    {
-        printf("To create the thread for AppThread_1 is fail.\n");
-    }
-
-}
-
-/*************************************************************************
-* FUNCTION:
-*   Main_AppThread_1
-*
-* DESCRIPTION:
-*   the application thread 1
-*
-* PARAMETERS
-*   1. argu     : [In] the input argument
-*
-* RETURNS
-*   none
-*
-*************************************************************************/
-static void Main_AppThread_1(void *argu)
-{
-    uint32_t ulCount = 0;
     
-    while (1)
-    {
-        osDelay(5000);      // delay 1000ms (1sec)
-        
-        Hal_Uart_DataSend(UART_IDX_0,'Y');
-        // send the message into AppMessageQ
-        ulCount++;
-        printf("xs_v1.0.1 free heap:%d\n",xPortGetFreeHeapSize());
-    }
+
+    extern void init_app();    
+    
+
+    init_app();
+    //Uart init
+  
+
+
 }
+
 

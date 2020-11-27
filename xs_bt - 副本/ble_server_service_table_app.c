@@ -27,8 +27,8 @@ static UINT8 gBleAdvertData[] =
     GAP_ADTYPE_FLAGS,
     GAP_ADTYPE_FLAGS_GENERAL | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
     // connection interval range
-    0x06,
-    GAP_ADTYPE_MANUFACTURER_SPECIFIC,1,2,3,4,5,
+    0x0C,
+    GAP_ADTYPE_MANUFACTURER_SPECIFIC,0,0,0,0,0,0,0,0,0,0,0,
     0x03,
     GAP_ADTYPE_16BIT_MORE,0xF0,0xFF
 };
@@ -305,7 +305,6 @@ static void BleAppMsgHandler(TASK task, MESSAGEID id, MESSAGE message)
 
 static void BleAppTaskHandler(TASK task, MESSAGEID id, MESSAGE message)
 {
-    printf("BleAppTaskHandler OK\r\n");
     if ((id >= LE_GATT_MSG_BASE) && (id < LE_GATT_MSG_TOP))
     {
         BleAppGattMsgHandler(task, id, message);
@@ -328,8 +327,11 @@ BLE_APP_DATA_T* BleAppGetEntity(void)
 {
     return &gTheBle;
 }
-
-void BleAppInit(void)
+void set_ble_manufacture_data(char* dev_id) 
+{
+    memcpy(gBleAdvertData+5,dev_id,11);//change ble adv
+}
+void xs_ble_init(char* dev_id)
 {
     gTheBle.state = APP_STATE_INIT;
     gTheBle.curr_mtu = 23;
@@ -339,6 +341,7 @@ void BleAppInit(void)
     gTheBle.latency  = DEFAULT_DESIRED_SLAVE_LATENCY;
     gTheBle.sv_tmo   = DEFAULT_DESIRED_SUPERVERSION_TIMEOUT;
     
+    set_ble_manufacture_data(dev_id);
     LeHostCreateTask(&gTheBle.task, BleAppTaskHandler);
     LeSendMessage(&gTheBle.task, BLE_APP_MSG_INITIALIZING, 0);
     printf("OPL1000 BLE init completed. \r\n");
@@ -347,3 +350,10 @@ void BleAppInit(void)
     tracer_log_level_set(255, 7);
 }
 
+void ble_set_FFF1_data()
+{
+    char* tt="123456ss";
+    //LeGattChangeAttrVal(gBlpsSvc, BWP_IDX_DATA_OUT_VAL, 8,tt );
+    //LeGattChangeAttrVal(gBlpsSvc, BWP_IDX_DATA_OUT_CFG, 8,tt );
+    LeGattCharValNotify(gTheBle.conn_hdl, gTheBle.store->send_hdl, 8, tt);
+}
