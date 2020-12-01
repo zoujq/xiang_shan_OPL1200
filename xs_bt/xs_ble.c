@@ -27,7 +27,7 @@ void xs_ble_received_cb(char* buff,int len)
 	}
 	memcpy(rev_buff+receive_counter,buff,len);
 	receive_counter+=len;
-	print_hex(rev_buff,receive_counter);
+	
 	if(receive_counter>5)
 	{
 		if(rev_buff[0]==0x10 && rev_buff[1]==0x00 && rev_buff[2]==0x00 && rev_buff[3]==0xC5)
@@ -36,7 +36,7 @@ void xs_ble_received_cb(char* buff,int len)
 			{
 				send_msg_to_app(2,rev_buff);
 				receive_counter=0;
-				
+				print_hex(rev_buff,receive_counter);
 			}
 			else
 			{

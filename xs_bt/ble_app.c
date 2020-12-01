@@ -718,4 +718,7 @@ void xs_ble_init(char* dev_id)
 
     LeHostCreateTask(&gTheBle.task, BleWifi_Ble_TaskHandler);
 	BleWifi_Ble_SendAppMsgToBle(BLEWIFI_APP_MSG_INITIALIZING, 0, NULL);
+
+    tracer_log_mode_set(2);
+    tracer_log_level_set(255, 7);
 }
