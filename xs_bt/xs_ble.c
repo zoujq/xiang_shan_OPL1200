@@ -5,7 +5,8 @@
 #include "ble_app.h"
 #include "ble_app_gatt.h"
 
-char rev_buff[200];
+char g_ble_connect_status=0;
+char rev_buff[301];
 void xs_ble_received_cb(char* buff,int len)
 {
 	static int receive_counter=0;
@@ -18,8 +19,15 @@ void xs_ble_received_cb(char* buff,int len)
 			receive_counter=0;
 		}
 	}
+	
+	if(receive_counter+len>300)
+	{
+		receive_counter=0;
+		return;
+	}
 	memcpy(rev_buff+receive_counter,buff,len);
 	receive_counter+=len;
+	print_hex(rev_buff,receive_counter);
 	if(receive_counter>5)
 	{
 		if(rev_buff[0]==0x10 && rev_buff[1]==0x00 && rev_buff[2]==0x00 && rev_buff[3]==0xC5)
@@ -28,8 +36,7 @@ void xs_ble_received_cb(char* buff,int len)
 			{
 				send_msg_to_app(2,rev_buff);
 				receive_counter=0;
-				printf("ble received:");
-				print_hex(rev_buff,rev_buff[4]);
+				
 			}
 			else
 			{
@@ -38,6 +45,7 @@ void xs_ble_received_cb(char* buff,int len)
 		}
 		else
 		{
+			printf("packet header error");
 			receive_counter=0;
 		}
 	}
@@ -46,5 +54,13 @@ void xs_ble_received_cb(char* buff,int len)
 }
 void xs_send_from_ble(char* buff,int len)
 {
-	BleWifi_Ble_SendAppMsgToBle(BLEWIFI_APP_MSG_SEND_DATA, len, buff);
+	if(g_ble_connect_status){
+		BleWifi_Ble_SendAppMsgToBle(BLEWIFI_APP_MSG_SEND_DATA, len, buff);
+		printf("ble send:");
+		print_hex(buff,len);
+	}
+	else{
+		printf("ble send fail ,not connect:");
+	}
+	
 }

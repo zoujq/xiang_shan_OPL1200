@@ -101,7 +101,7 @@ void get_store_data(xs_app_data_t *tmp)
 }
 void set_store_data(xs_app_data_t *tmp)
 {
-	 if (MW_FIM_OK != MwFim_FileWrite(MW_FIM_GP12_SENSOR_DATA, 5, MW_FIM_SENSOR_DATA_CFG_SIZE, (uint8_t *)tmp))
+	 if (MW_FIM_OK != MwFim_FileWrite(MW_FIM_GP12_SENSOR_DATA, 6, MW_FIM_SENSOR_DATA_CFG_SIZE, (uint8_t *)tmp))
     {
         printf("\r\nGroup 12 Write Number Value ERROR\r\n");
     } 

@@ -20,6 +20,7 @@
 #include "ble_app_gatt.h"
 #include "xs_app.h"
 
+extern char g_ble_connect_status;
 extern xs_app_data_t g_app_data;
 extern LE_ERR_STATE LeGapGetBdAddr(BD_ADDR addr);
 extern T_BleWifi_Ble_MsgHandlerTbl gBleGattMsgHandlerTbl[];
@@ -326,7 +327,7 @@ static void BleWifi_Ble_CmMsgHandler_EnterAdvertisingCfm(TASK task, MESSAGEID id
 {
     LE_CM_MSG_ENTER_ADVERTISING_CFM_T *cfm = (LE_CM_MSG_ENTER_ADVERTISING_CFM_T *)message;
     BLEWIFI_INFO("APP-LE_CM_MSG_ENTER_ADVERTISING_CFM Status = %x\r\n", cfm->status);
-    
+    g_ble_connect_status=0;
     if (cfm->status == SYS_ERR_SUCCESS)
     {
         // !!! Change the time of advertising
@@ -381,6 +382,7 @@ static void BleWifi_Ble_CmMsgHandler_ConnectionCompleteInd(TASK task, MESSAGEID 
     
     if (ind->status == SYS_ERR_SUCCESS)
     {
+        g_ble_connect_status=1;
         gTheBle.state = APP_STATE_CONNECTED;
     
         gTheBle.conn_hdl = ind->conn_hdl;
@@ -390,7 +392,7 @@ static void BleWifi_Ble_CmMsgHandler_ConnectionCompleteInd(TASK task, MESSAGEID 
         gTheBle.max_itvl = ind->conn_interval;
         gTheBle.latency = ind->conn_latency;
         gTheBle.sv_tmo = ind->supervison_timeout;
-    
+        
         BleWifi_Ble_GattIndicateServiceChange(ind->conn_hdl);
         // BleWifi_Ctrl_MsgSend(BLEWIFI_CTRL_MSG_BLE_CONNECTION_COMPLETE, NULL, 0);
     }

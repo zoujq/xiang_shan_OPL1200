@@ -1,6 +1,8 @@
 #ifndef __XS_APP_H__
 #define __XS_APP_H__
 
+#define VERSION "V1.0.12"
+
 typedef struct {
     int check_sum;
     char wifi_ssid[25];

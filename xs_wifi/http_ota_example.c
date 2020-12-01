@@ -42,8 +42,8 @@ osThreadId ota_task_id;
  ****************************************************************************/
 static httpclient_t g_fota_httpclient = {0};
 static const char *TAG = "ota";
-extern bool g_connection_flag ;
-
+extern bool g_wifi_connection_flag ;
+char* http_get_url=0;
 
 void ota_write_hexdump(const uint8_t *buf, size_t len)
 {
@@ -275,23 +275,21 @@ int ota_download_by_http(char *param)
 }
 
 void ota_thread(void *args)
-{
-      g_connection_flag = false; 
-    
+{    
     /* Tcpip stack and net interface initialization,  dhcp client process initialization. */
-    lwip_network_init(WIFI_MODE_STA);
+    // lwip_network_init(WIFI_MODE_STA);
 
     /* Waiting for connection & got IP from DHCP server */
-    lwip_net_ready();
-
-      if(g_connection_flag == true)
-          LOG_I(TAG,"Opulinks-TEST-AP connected \r\n");
-    
-    if (ota_download_by_http(HTTP_GET_URL) == 0)
+    // lwip_net_ready();
+ 
+    printf("ota_download_by_http:%s\n",http_get_url);
+    if (ota_download_by_http(http_get_url) == 0)
     {
+        printf("ota success,ready to restart\n");
+        osDelay(5000);
         Hal_Sys_SwResetAll();
-    }
-
+    }  
+     printf("ota fail\n");
     // while (1) {
 
     //     osDelay(2000);
@@ -299,10 +297,16 @@ void ota_thread(void *args)
     osThreadTerminate(ota_task_id);
 }
 
-void ota_start(void)
+void xs_ota_start(char* url)
 {
     osThreadDef_t task_def;
 
+    http_get_url=url;
+    if(g_wifi_connection_flag == false)
+    {
+        printf("ota fail, wifi not connected \r\n");
+        return;
+    }
     /* Create task */
     task_def.name = "user_app";
     task_def.stacksize = OS_TASK_STACK_SIZE_APP*2;

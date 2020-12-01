@@ -40,13 +40,13 @@
 osThreadId wifi_task_id;
 #define WIFI_READY_TIME 2000
 
-bool g_connection_flag = false;
+bool g_wifi_connection_flag = false;
 
 extern xs_app_data_t g_app_data;
 
 void wifi_thread(void *args)
 {
-    g_connection_flag = false;
+    g_wifi_connection_flag = false;
 #if defined(__RF_LP_MODE__)
       unsigned char rf_level = 0x0F;
 #endif
@@ -70,7 +70,7 @@ void wifi_thread(void *args)
 
     while(1)
     {
-        printf("wifi status:%d \r\n",g_connection_flag);
+        printf("wifi status:%d \r\n",g_wifi_connection_flag);
         osDelay(5000);
     }
 }
@@ -175,6 +175,7 @@ int wifi_event_handler_cb(wifi_event_id_t event_id, void *data, uint16_t length)
     case WIFI_EVENT_STA_DISCONNECTED:
         printf("\r\nWi-Fi Disconnected \r\n");
         wifi_do_scan(WIFI_SCAN_TYPE_MIX);
+        g_wifi_connection_flag=false;
         break;
     case WIFI_EVENT_SCAN_COMPLETE:
         printf("\r\nWi-Fi Scan Done \r\n");
@@ -183,7 +184,7 @@ int wifi_event_handler_cb(wifi_event_id_t event_id, void *data, uint16_t length)
     case WIFI_EVENT_STA_GOT_IP:
         printf("\r\nWi-Fi Got IP \r\n");
         lwip_get_ip_info("st1");
-            g_connection_flag = true;
+            g_wifi_connection_flag = true;
         break;
     case WIFI_EVENT_STA_CONNECTION_FAILED:
         printf("\r\nWi-Fi Connected failed\r\n");
@@ -195,7 +196,15 @@ int wifi_event_handler_cb(wifi_event_id_t event_id, void *data, uint16_t length)
     }
     return 0;
 }
+void change_user_ssid_psd(char* ssid,char* psd)
+{
+    wifi_config_t wifi_config = {0};
+    wifi_get_config(WIFI_MODE_STA, &wifi_config);
+    strcpy((char *)wifi_config.sta_config.ssid, ssid);
+    strcpy((char *)wifi_config.sta_config.password, psd);
+    wifi_set_config(WIFI_MODE_STA, &wifi_config);
 
+}
 void xs_wifi_init(void)
 {
     osThreadDef_t task_def;

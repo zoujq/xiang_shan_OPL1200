@@ -20,7 +20,7 @@
 
 
 
-char rev_buff[100];
+char rev_buff[301];
 static void xs_uart_received_cb(uint32_t ulData)
 {
 	static int receive_counter=0;
@@ -32,6 +32,11 @@ static void xs_uart_received_cb(uint32_t ulData)
 		{
 			receive_counter=0;
 		}
+	}
+	if(receive_counter>300)
+	{
+		receive_counter=0;
+		return;
 	}
 	rev_buff[receive_counter]=0xFF & ulData;
 	if(receive_counter>5)
@@ -70,7 +75,7 @@ void xs_send_from_uart(char* buff,int len)
 		Hal_Uart_DataSend(UART_IDX_0,buff[i]);
 	}
 	printf("uart send:");
-	print_hex(rev_buff,len);
+	print_hex(buff,len);
 }
 //	6
 void xs_uart_init()
