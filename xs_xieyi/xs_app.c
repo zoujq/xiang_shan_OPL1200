@@ -90,7 +90,7 @@ void init_app()
 
 	
 	get_store_data(&g_app_data);
-	if(g_app_data.check_sum!=3457)
+	if(g_app_data.check_sum!=3456)
 	{
 		printf("device not init!\n");
 		char default_device_id[11]={
@@ -340,6 +340,11 @@ void ble_opration(char* packet)
             case 0x1b:
             {
                 static char url[100]={0};
+                if(packet[4]>90)
+                {
+                    printf("url len error\n");
+                    return;
+                }
                 memcpy(url,packet+7,packet[4]-8);
                 url[packet[4]-8]=0;
                 printf("start ota,load from url:%s\n", url);
@@ -347,10 +352,18 @@ void ble_opration(char* packet)
                 break;  
             }              
             case 0x1c:
+                if(packet[7]>24 || packet[8+packet[7]]>24)
+                {
+                    printf("wifi para len error,%d,%d\n",packet[7],packet[8+packet[7]]);
+                    return;
+                }
                 memcpy(g_app_data.wifi_ssid,packet+8,packet[7]);
-                memcpy(g_app_data.wifi_password,packet+8+1+packet[7],packet[8+1+packet[7]]);
+                memcpy(g_app_data.wifi_password,packet+8+1+packet[7],packet[8+packet[7]]);
+
+                g_app_data.wifi_ssid[packet[7]]=0;
+                g_app_data.wifi_password[packet[8+packet[7]]]=0;
                 printf("set wifi :%s,%s\n", g_app_data.wifi_ssid,g_app_data.wifi_password);
-                //set_store_data(&g_app_data);
+                set_store_data(&g_app_data);
                 change_user_ssid_psd(g_app_data.wifi_ssid,g_app_data.wifi_password);
                 break;
             case 0x1d:
@@ -368,18 +381,25 @@ void ble_opration(char* packet)
                     break;
                 }
             case 0x1e:
-                memcpy(g_app_data.server,packet+8,packet[7]);
-                g_app_data.server_port=packet[8+1+packet[7]]<<8 +packet[8+2+packet[7]];
+                memcpy(g_app_data.server,packet+7,packet[4]-10);
+                g_app_data.server_port=packet[packet[4]-2] | (packet[packet[4]-3]<<8);
+                g_app_data.server[packet[4]-10]=0;
                 printf("set server :%s,%d\n", g_app_data.server,g_app_data.server_port);
                 set_store_data(&g_app_data);
                 break;
             case 0x20:
+                if(packet[4]!=19)
+                {
+                    printf("device_id error\n");
+                    return;
+                }
                 memcpy(g_app_data.device_id,packet+7,packet[4]-8);
                 printf("set device_id:%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
         D[0],D[1],D[2],D[3],D[4],D[5],D[6],D[7],D[8],D[9],D[10] );
                 set_store_data(&g_app_data);
                 break;
             case 0x21:
+  
                 create_packet(0xaa,0x21,g_app_data.device_id,11);
                 xs_send_from_ble(g_packet_buff,g_packet_buff[4]);
                 break;

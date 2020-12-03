@@ -124,6 +124,7 @@ int wifi_connection(void)
     /* Get APs list */
     wifi_scan_get_ap_list(p_scan_list);
 
+    printf("want wifi: %s\n", wifi_config.sta_config.ssid);
     /* Search if AP matched */
     for (i=0; i< p_scan_list->num; i++) {
         if (memcmp(p_scan_list->ap_record[i].bssid, wifi_config.sta_config.bssid, WIFI_MAC_ADDRESS_LENGTH) == 0)
@@ -202,6 +203,8 @@ void change_user_ssid_psd(char* ssid,char* psd)
     wifi_get_config(WIFI_MODE_STA, &wifi_config);
     strcpy((char *)wifi_config.sta_config.ssid, ssid);
     strcpy((char *)wifi_config.sta_config.password, psd);
+    wifi_config.sta_config.ssid_length = strlen(g_app_data.wifi_ssid);
+    wifi_config.sta_config.password_length = strlen(g_app_data.wifi_password);
     wifi_set_config(WIFI_MODE_STA, &wifi_config);
 
 }

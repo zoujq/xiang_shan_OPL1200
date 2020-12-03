@@ -174,6 +174,7 @@ void xs_tcp_received_cb(char* buff,int len)
     }    
     memcpy(rev_buff+receive_counter,buff,len);
     receive_counter+=len;
+    printf("tcp rd:");
     print_hex(rev_buff,receive_counter);
     if(receive_counter>5)
     {
@@ -183,8 +184,6 @@ void xs_tcp_received_cb(char* buff,int len)
             {
                 send_msg_to_app(3,rev_buff);
                 receive_counter=0;
-                printf("tcp received:");
-                print_hex(rev_buff,rev_buff[4]);
             }
             else
             {
